@@ -5,7 +5,7 @@
 # LỆNH KHỞI ĐỘNG SERVER (Mở Terminal tại thư mục chứa file này):
 # uvicorn api_ai:app --reload
 # ==============================================================================
-
+from typing import List # Thêm cái này vào để xài danh sách
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -145,3 +145,63 @@ def predict_risk(student: StudentData):
     except Exception as e:
         # Báo lỗi 500 nếu Code Python bị văng lỗi (Giúp BE dễ debug)
         raise HTTPException(status_code=500, detail=f"Lỗi Server AI: {str(e)}")
+    # 6. API XỬ LÝ SỈ (BATCH PREDICTION) - Dành cho file CSV
+@app.post("/api/predict_batch")
+def predict_risk_batch(students: List[StudentData]):
+    try:
+        # 1. Chuyển nguyên 1 mảng từ Backend thành Bảng dữ liệu (DataFrame)
+        data_dicts = [student.dict() for student in students]
+        df_input = pd.DataFrame(data_dicts)
+        
+        # 2. Tiền xử lý hàng loạt
+        for col in encoders:
+            if col in df_input.columns:
+                df_input[col] = df_input[col].astype(str)
+                # Dùng map để xử lý nhanh, nhãn nào lạ thì cho về 0
+                mapping_dict = dict(zip(encoders[col].classes_, range(len(encoders[col].classes_))))
+                df_input[col] = df_input[col].map(mapping_dict).fillna(0).astype(int)
+                
+        X_input = df_input[FEATURES]
+        
+        # 3. AI Dự báo 1 lần cho cả 1000 đứa (Rất nhanh)
+        risk_probabilities = model.predict_proba(X_input)[:, 1] * 100
+        
+        # 4. Gom kết quả lại
+        batch_results = []
+        for i, risk in enumerate(risk_probabilities):
+            student_info = students[i] # ĐÂY LÀ CỤC DATA GỐC CỦA ĐỨA THỨ i
+            risk_percent = round(risk, 2)
+            
+            # Phân loại
+            if risk_percent >= 65:
+                risk_level = "CAO (Nguy hiểm)"
+            elif risk_percent >= 40:
+                risk_level = "TRUNG BÌNH (Cần theo dõi)"
+            else:
+                risk_level = "THẤP (An toàn)"
+                
+            # Tạo lý do (Viết gọn logic ngược)
+            reasons = []
+            if risk_percent >= 40:
+                if student_info.Attendance < 70: reasons.append(f"Chuyên cần thấp ({student_info.Attendance}%)")
+                if student_info.Previous_Scores < 60: reasons.append(f"Mất gốc ({student_info.Previous_Scores}/100)")
+                if student_info.Hours_Studied < 10: reasons.append(f"Tự học ít ({student_info.Hours_Studied}h)")
+                if len(reasons) == 0: reasons.append("Có rủi ro tiềm ẩn")
+
+            # GÓI KẾT QUẢ: Bê nguyên 11 thuộc tính nhét vào đây
+            batch_results.append({
+                "index": i, 
+                "risk_score_percent": risk_percent,
+                "risk_level": risk_level,
+                "reasons": reasons,
+                "original_features": student_info.dict() # <--- CHÌA KHÓA NẰM Ở ĐÂY
+            })
+            
+        return {
+            "status": "success",
+            "total_processed": len(students),
+            "results": batch_results
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi Server AI khi xử lý sỉ: {str(e)}")
