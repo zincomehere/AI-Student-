@@ -210,25 +210,27 @@ def process_batch_logic(students: List[StudentData]):
     for i, risk in enumerate(risk_probabilities):
         sv_dict = data_dicts[i]
         
-        # 🔥 TẦNG 1: LƯỚI LỌC "ĐIỂM LIỆT" (QUY CHẾ TRƯỜNG) 🔥
+        # 🔥 TẦNG 1: LƯỚI LỌC "ĐIỂM LIỆT" (QUY CHẾ TRƯỜNG)
         if sv_dict['Attendance'] < 70.0:
             batch_results.append({
                 "index": int(i), 
                 "risk_score_percent": 100.0,
-                "risk_level": "ĐÌNH CHỈ / CẤM THI",
-                "sorted_reasons_for_ui": [f"Vắng mặt quá 30% (Đạt {sv_dict['Attendance']}%) - Mức Cấm thi theo quy chế."],
-                "ai_explanation_path": ["Vi phạm Quy chế cứng về Chuyên cần.", "==> DỰ ĐOÁN CUỐI CÙNG TỪ HỆ THỐNG: CẤM THI "],
+                # TRẢ LẠI ĐÚNG CHỮ FRONTEND CẦN ĐỂ KHÔNG GÃY UI
+                "risk_level": "CAO (Nguy hiểm)", 
+                # NHÉT CHỮ CẤM THI VÀO ĐÂY THEO ĐÚNG Ý FRONTEND
+                "sorted_reasons_for_ui": [f"BÁO ĐỘNG ĐỎ: Vắng mặt quá 30% (Đạt {sv_dict['Attendance']}%) - MỨC CẤM THI THEO QUY CHẾ."],
+                "ai_explanation_path": ["Hệ thống phát hiện vi phạm Quy chế cứng về Chuyên cần.", "==> XỬ LÝ KHẨN CẤP: ĐÌNH CHỈ / CẤM THI "],
                 "original_features": sv_dict
             })
-            continue # Vi phạm rồi thì bỏ qua, không tính AI nữa
+            continue 
             
         elif sv_dict['Previous_Scores'] <= 0.0:
             batch_results.append({
                 "index": int(i), 
                 "risk_score_percent": 100.0,
-                "risk_level": "CAO (Nguy hiểm)",
-                "sorted_reasons_for_ui": ["Báo động đỏ: Điểm tích lũy bằng 0."],
-                "ai_explanation_path": ["Vi phạm ranh giới điểm số cốt lõi.", "==> DỰ ĐOÁN CUỐI CÙNG TỪ HỆ THỐNG: CAO (Nguy hiểm)"],
+                "risk_level": "CAO (Nguy hiểm)", # TRẢ LẠI ĐÚNG CHỮ
+                "sorted_reasons_for_ui": ["BÁO ĐỘNG ĐỎ: Điểm tích lũy bằng 0 - MỨC ĐÌNH CHỈ HỌC TẬP."],
+                "ai_explanation_path": ["Vi phạm ranh giới điểm số cốt lõi.", "==> XỬ LÝ KHẨN CẤP: ĐÌNH CHỈ / CẤM THI "],
                 "original_features": sv_dict
             })
             continue
