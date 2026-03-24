@@ -37,7 +37,7 @@ model.load_model("catboost_model.cbm")
 catboost_predictions = model.predict(X)
 
 # Tạo cây độ sâu 3
-surrogate_tree = DecisionTreeClassifier(max_depth=5, random_state=42)
+surrogate_tree = DecisionTreeClassifier(max_depth=7, random_state=42)
 surrogate_tree.fit(X, catboost_predictions)
 
 # LƯU CÂY VÀO FILE .PKL 

@@ -44,7 +44,7 @@ for i in range(n_nodes):
 # 4. In bằng chứng thép ra màn hình
 for bien, cac_diem_cat in diem_cat_theo_bien.items():
     danh_sach_so = ", ".join([str(so) for so in sorted(list(cac_diem_cat))])
-    print(f"📍 Thuộc tính [{bien.ljust(20)}]: Cắt tại các mốc -> {danh_sach_so}")
+    print(f"Thuộc tính [{bien.ljust(20)}]: Cắt tại các mốc -> {danh_sach_so}")
 
 print("\n💡 KẾT LUẬN: Mọi con số bạn thấy trên API đều được móc trực tiếp từ đây!")
 

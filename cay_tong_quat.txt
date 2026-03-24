@@ -3,92 +3,341 @@
 |   |   |--- Hours_Studied <= 15.50
 |   |   |   |--- Attendance <= 66.50
 |   |   |   |   |--- Previous_Scores <= 85.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Motivation_Level <= 0.50
+|   |   |   |   |   |   |--- Family_Income <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Family_Income >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Motivation_Level >  0.50
+|   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |   |--- Previous_Scores >  85.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Family_Income <= 0.50
+|   |   |   |   |   |   |--- Motivation_Level <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Motivation_Level >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Family_Income >  0.50
+|   |   |   |   |   |   |--- Sleep_Hours <= 8.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Sleep_Hours >  8.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |--- Attendance >  66.50
 |   |   |   |   |--- Motivation_Level <= 0.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Previous_Scores <= 63.50
+|   |   |   |   |   |   |--- Hours_Studied <= 7.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Hours_Studied >  7.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Previous_Scores >  63.50
+|   |   |   |   |   |   |--- Peer_Influence <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Motivation_Level >  0.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Family_Income <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Family_Income >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Previous_Scores <= 95.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Previous_Scores >  95.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |--- Hours_Studied >  15.50
 |   |   |   |--- Attendance <= 64.50
 |   |   |   |   |--- Previous_Scores <= 79.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Peer_Influence <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Previous_Scores <= 64.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Previous_Scores >  64.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |   |--- Previous_Scores >  79.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Peer_Influence <= 0.50
+|   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Peer_Influence >  0.50
+|   |   |   |   |   |   |--- Hours_Studied <= 16.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Hours_Studied >  16.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |--- Attendance >  64.50
 |   |   |   |   |--- Previous_Scores <= 66.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Peer_Influence <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Teacher_Quality <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Teacher_Quality >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |   |--- Previous_Scores >  66.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Previous_Scores <= 79.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Previous_Scores >  79.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Access_to_Resources <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Access_to_Resources >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |--- Hours_Studied >  21.50
 |   |   |--- Hours_Studied <= 25.50
 |   |   |   |--- Access_to_Resources <= 0.50
 |   |   |   |   |--- Previous_Scores <= 66.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Attendance <= 68.50
+|   |   |   |   |   |   |--- Peer_Influence <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Attendance >  68.50
+|   |   |   |   |   |   |--- Family_Income <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Family_Income >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Previous_Scores >  66.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Attendance <= 63.50
+|   |   |   |   |   |   |--- Sleep_Hours <= 5.00
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Sleep_Hours >  5.00
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Attendance >  63.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |--- Access_to_Resources >  0.50
 |   |   |   |   |--- Attendance <= 66.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Previous_Scores <= 69.50
+|   |   |   |   |   |   |--- Sleep_Hours <= 6.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Sleep_Hours >  6.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Previous_Scores >  69.50
+|   |   |   |   |   |   |--- Peer_Influence <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Attendance >  66.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores <= 73.50
+|   |   |   |   |   |   |--- Sleep_Hours <= 9.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Sleep_Hours >  9.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Previous_Scores >  73.50
+|   |   |   |   |   |   |--- Hours_Studied <= 22.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Hours_Studied >  22.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |--- Hours_Studied >  25.50
 |   |   |   |--- Hours_Studied <= 27.50
 |   |   |   |   |--- Previous_Scores <= 64.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Extracurricular_Activities <= 0.50
+|   |   |   |   |   |   |--- Teacher_Quality <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Teacher_Quality >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Extracurricular_Activities >  0.50
+|   |   |   |   |   |   |--- Sleep_Hours <= 5.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Sleep_Hours >  5.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Previous_Scores >  64.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Attendance <= 62.50
+|   |   |   |   |   |   |--- Peer_Influence <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Peer_Influence >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Attendance >  62.50
+|   |   |   |   |   |   |--- Previous_Scores <= 86.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Previous_Scores >  86.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |--- Hours_Studied >  27.50
 |   |   |   |   |--- Attendance <= 60.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores <= 77.50
+|   |   |   |   |   |   |--- Previous_Scores <= 58.00
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Previous_Scores >  58.00
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Previous_Scores >  77.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Attendance >  60.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied <= 29.50
+|   |   |   |   |   |   |--- Attendance <= 61.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Attendance >  61.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied >  29.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |--- Attendance >  71.50
 |   |--- Hours_Studied <= 14.50
 |   |   |--- Attendance <= 80.50
 |   |   |   |--- Hours_Studied <= 12.50
 |   |   |   |   |--- Previous_Scores <= 86.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Motivation_Level <= 1.50
+|   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Motivation_Level >  1.50
+|   |   |   |   |   |   |--- Distance_from_Home <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Distance_from_Home >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |   |--- Previous_Scores >  86.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Attendance <= 77.50
+|   |   |   |   |   |   |--- Sleep_Hours <= 5.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Sleep_Hours >  5.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Attendance >  77.50
+|   |   |   |   |   |   |--- Extracurricular_Activities <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Extracurricular_Activities >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |--- Hours_Studied >  12.50
 |   |   |   |   |--- Previous_Scores <= 78.50
-|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Peer_Influence <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Teacher_Quality <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Teacher_Quality >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
 |   |   |   |   |--- Previous_Scores >  78.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Access_to_Resources <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Access_to_Resources >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |--- Attendance >  80.50
 |   |   |   |--- Attendance <= 88.50
 |   |   |   |   |--- Previous_Scores <= 75.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |--- Extracurricular_Activities <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Extracurricular_Activities >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |--- Hours_Studied <= 8.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Hours_Studied >  8.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Previous_Scores >  75.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied <= 11.50
+|   |   |   |   |   |   |--- Motivation_Level <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Motivation_Level >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied >  11.50
+|   |   |   |   |   |   |--- Previous_Scores <= 97.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Previous_Scores >  97.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |--- Attendance >  88.50
 |   |   |   |   |--- Attendance <= 91.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores <= 71.50
+|   |   |   |   |   |   |--- Family_Income <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Family_Income >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores >  71.50
+|   |   |   |   |   |   |--- Hours_Studied <= 4.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Hours_Studied >  4.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Attendance >  91.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied <= 6.50
+|   |   |   |   |   |   |--- Hours_Studied <= 3.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Hours_Studied >  3.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied >  6.50
+|   |   |   |   |   |   |--- Family_Income <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Family_Income >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |--- Hours_Studied >  14.50
 |   |   |--- Attendance <= 78.50
 |   |   |   |--- Hours_Studied <= 20.50
 |   |   |   |   |--- Previous_Scores <= 67.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Distance_from_Home <= 1.50
+|   |   |   |   |   |   |--- Peer_Influence <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Peer_Influence >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Distance_from_Home >  1.50
+|   |   |   |   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Previous_Scores >  67.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied <= 16.50
+|   |   |   |   |   |   |--- Previous_Scores <= 73.50
+|   |   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |   |--- Previous_Scores >  73.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied >  16.50
+|   |   |   |   |   |   |--- Distance_from_Home <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Distance_from_Home >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |--- Hours_Studied >  20.50
 |   |   |   |   |--- Previous_Scores <= 50.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Motivation_Level <= 1.50
+|   |   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |   |--- Motivation_Level >  1.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Previous_Scores >  50.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied <= 24.50
+|   |   |   |   |   |   |--- Previous_Scores <= 71.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Previous_Scores >  71.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied >  24.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |--- Attendance >  78.50
 |   |   |   |--- Attendance <= 84.50
 |   |   |   |   |--- Hours_Studied <= 20.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores <= 63.50
+|   |   |   |   |   |   |--- Motivation_Level <= 1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Motivation_Level >  1.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores >  63.50
+|   |   |   |   |   |   |--- Peer_Influence <= 0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Peer_Influence >  0.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Hours_Studied >  20.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied <= 21.50
+|   |   |   |   |   |   |--- Attendance <= 79.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Attendance >  79.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Hours_Studied >  21.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |--- Attendance >  84.50
 |   |   |   |   |--- Hours_Studied <= 15.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Peer_Influence <= 1.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Peer_Influence >  1.50
+|   |   |   |   |   |   |--- Attendance <= 91.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Attendance >  91.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
 |   |   |   |   |--- Hours_Studied >  15.50
-|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores <= 56.50
+|   |   |   |   |   |   |--- Previous_Scores <= 55.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |   |--- Previous_Scores >  55.50
+|   |   |   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |   |--- Previous_Scores >  56.50
+|   |   |   |   |   |   |--- Dự báo: AN TOÀN
