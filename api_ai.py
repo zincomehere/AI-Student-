@@ -2,15 +2,18 @@
 # LỆNH KHỞI ĐỘNG SERVER LOCAL: uvicorn api_ai:app --reload
 # ==============================================================================
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List
 import pandas as pd
+import numpy as np
 import joblib
 from catboost import CatBoostClassifier
+import json
+import traceback
 
-app = FastAPI(title="Hệ thống Cảnh báo Rủi ro Sinh viên - AI API", version="Final_Master")
+app = FastAPI(title="Hệ thống Cảnh báo Rủi ro Sinh viên - Ultimate AI API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,8 +23,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Biến toàn cục lưu trữ mô hình
 model = None
 encoders = None
+surrogate_tree = None
+cay_text = ""
+bang_quy_doi = {}
 
 FEATURES = [
     'Attendance', 'Hours_Studied', 'Previous_Scores', 'Access_to_Resources', 
@@ -29,7 +36,22 @@ FEATURES = [
     'Extracurricular_Activities', 'Sleep_Hours', 'Teacher_Quality'
 ]
 
-# 1. BỌC ÁO GIÁP PYDANTIC & CHO PHÉP DỮ LIỆU THỪA TỪ CSV
+# 🔥 BÍ KÍP MỚI: SẮP XẾP MỨC ĐỘ QUAN TRỌNG DỰA TRÊN BIỂU ĐỒ FEATURE IMPORTANCE CỦA AI
+FEATURE_IMPORTANCE_ORDER = [
+    'Attendance',           # 22.4% (Top 1)
+    'Hours_Studied',        # 19.6% (Top 2)
+    'Previous_Scores',      # 11.1% (Top 3)
+    'Access_to_Resources',  # 9.2%  (Top 4)
+    'Motivation_Level',     # 6.4%  (Top 5)
+    'Peer_Influence',       # 6.1%  (Top 6)
+    'Sleep_Hours',          # 5.7%  (Top 7)
+    'Family_Income',        # 5.7%  (Top 8)
+    'Distance_from_Home',   # 5.0%  (Top 9)
+    'Teacher_Quality',      # 4.6%  (Top 10)
+    'Extracurricular_Activities' # 4.3% (Top 11)
+]
+
+# 1. BỌC ÁO GIÁP PYDANTIC
 class StudentData(BaseModel):
     Attendance: float = Field(default=75.0)
     Hours_Studied: float = Field(default=10.0)
@@ -44,98 +66,225 @@ class StudentData(BaseModel):
     Teacher_Quality: str = Field(default="Medium")
 
     class Config:
-        extra = "ignore" # BÍ KÍP: Backend ném 20 cột sang cũng không báo lỗi, AI chỉ bốc 11 cột này ra xài.
+        extra = "ignore" # Bỏ qua cột rác từ Excel
 
 @app.on_event("startup")
 def load_ai_assets():
-    global model, encoders
+    global model, encoders, surrogate_tree, cay_text, bang_quy_doi
     try:
         model = CatBoostClassifier()
         model.load_model("catboost_model.cbm")
         encoders = joblib.load("label_encoders.pkl")
-        print("✅ Nạp thành công Mô hình & Từ điển!")
+        
+        surrogate_tree = joblib.load("surrogate_tree.pkl")
+        with open("cay_tong_quat.txt", "r", encoding="utf-8") as f:
+            # BÍ KÍP Ở ĐÂY: Dùng .split('\n') để băm chuỗi văn bản thành một Mảng (List)
+            cay_text = [line for line in f.read().split('\n') if line.strip()]
+            
+        for col, encoder in encoders.items():
+            bang_quy_doi[str(col)] = {str(label): int(val) for label, val in zip(encoder.classes_, range(len(encoder.classes_)))}
+            
+        print("✅ Nạp thành công Toàn bộ Mô hình CatBoost và Cây Quyết Định!")
     except Exception as e:
-        print(f"❌ LỖI NGHIÊM TRỌNG: {e}")
-
-@app.get("/")
-def health_check():
-    return {"status": "ok", "message": "Server AI đang hoạt động rất khỏe!"}
+        print(f"❌ LỖI NGHIÊM TRỌNG (Thiếu file): {e}")
 
 # ==============================================================================
-# API XỬ LÝ SỈ DÀNH CHO BẢNG DỮ LIỆU TỪ WEB
+# HÀM BỔ TRỢ: DỌN DẸP DỮ LIỆU JSON & DÒ ĐƯỜNG TRÊN CÂY
+# ==============================================================================
+def clean_for_json(obj):
+    if isinstance(obj, dict):
+        return {str(k): clean_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple, np.ndarray)):
+        return [clean_for_json(v) for v in obj]
+    elif isinstance(obj, (float, np.floating)):
+        if pd.isna(obj) or np.isinf(obj): return None
+        return float(obj)
+    elif isinstance(obj, (int, np.integer)):
+        return int(obj)
+    elif isinstance(obj, (str, bool, type(None))):
+        return obj
+    else:
+        return str(obj)
+
+def trich_xuat_duong_di_mot_sv(X_encoded_row):
+    if surrogate_tree is None:
+        return ["Lỗi: Hệ thống chưa nạp được Cây Quyết Định (surrogate_tree.pkl)"]
+
+    if X_encoded_row.ndim == 1:
+        X_encoded_row = X_encoded_row.reshape(1, -1)
+        
+    node_indicator = surrogate_tree.decision_path(X_encoded_row)
+    feature_idx = surrogate_tree.tree_.feature
+    threshold = surrogate_tree.tree_.threshold
+    
+    lo_trinh = []
+    node_index = node_indicator.indices[node_indicator.indptr[0]:node_indicator.indptr[1]]
+    
+    for node_id in node_index:
+        if feature_idx[node_id] == -2: break
+            
+        ten_bien = str(FEATURES[int(feature_idx[node_id])])
+        gia_tri_nguong = float(round(threshold[node_id], 2))
+        gia_tri_sv = float(round(X_encoded_row[0, int(feature_idx[node_id])], 2))
+        
+        huong_di = f"<= {gia_tri_nguong} (Rẽ TRÁI)" if gia_tri_sv <= gia_tri_nguong else f"> {gia_tri_nguong} (Rẽ PHẢI)"
+        lo_trinh.append(f"Xét [{ten_bien}]: Đạt {gia_tri_sv} {huong_di}")
+        
+    kq_cay_phu = "RỦI RO CAO" if surrogate_tree.predict(X_encoded_row)[0] == 1 else "AN TOÀN"
+    lo_trinh.append(f"==> DỰ ĐOÁN CỦA CÂY TÍNH TAY: {str(kq_cay_phu)}")
+    return lo_trinh
+
+def extract_sorted_reasons(row_dict, risk_percent):
+    reasons = []
+    if risk_percent < 40:
+        return ["Sinh viên đang duy trì các chỉ số học tập và sinh hoạt ở mức an toàn."]
+        
+    for feature in FEATURE_IMPORTANCE_ORDER:
+        val = row_dict.get(feature)
+        if val is None: continue
+        
+        # 🔥 ĐÃ SỬA: Thay 77.5 thành 71.5 (Để đồng bộ 100% với Surrogate Tree thực tế của bạn)
+        if feature == 'Attendance' and float(val) <= 71.5: 
+            reasons.append(f"Tỷ lệ chuyên cần thấp ({val}%)")
+            
+        # Tự học lấy mốc 14.5 (Theo điểm cắt của nhánh rủi ro cao)
+        elif feature == 'Hours_Studied' and float(val) <= 14.5:
+            reasons.append(f"Thời gian tự học quá ít ({val} giờ/tuần)")
+            
+        # Điểm nền tảng (Ông chạy file X-quang xem nó ra bao nhiêu thì điền vào đây, thường là 65.5)
+        elif feature == 'Previous_Scores' and float(val) <= 65.5:
+            reasons.append(f"Điểm nền tảng kỳ trước yếu ({val}/100)")
+            
+        # ... (Phần dưới giữ nguyên) ...
+           
+        elif feature == 'Access_to_Resources' and str(val) == 'Low':
+            reasons.append(f"Thiếu thốn tài nguyên phục vụ học tập")
+        elif feature == 'Motivation_Level' and str(val) == 'Low':
+            reasons.append(f"Động lực học tập đang ở mức Thấp")
+        elif feature == 'Peer_Influence' and str(val) == 'Negative':
+            reasons.append(f"Chịu ảnh hưởng tiêu cực từ bạn bè")
+        elif feature == 'Sleep_Hours' and float(val) <= 6.0:
+            reasons.append(f"Thiếu ngủ, thể trạng kém ({val} giờ/đêm)")
+        elif feature == 'Family_Income' and str(val) == 'Low':
+            reasons.append(f"Đang gặp áp lực về tài chính gia đình")
+        elif feature == 'Distance_from_Home' and str(val) == 'Far':
+            reasons.append(f"Di chuyển quá xa, mất nhiều thời gian")
+        elif feature == 'Teacher_Quality' and str(val) == 'Low':
+            reasons.append(f"Chưa thích nghi với chất lượng/phương pháp giảng dạy")
+            
+    if not reasons:
+        reasons.append("Rủi ro tổng hợp từ sự giao thoa phức tạp của nhiều yếu tố nhỏ.")
+        
+    return reasons
+
+# ==============================================================================
+# LÕI XỬ LÝ CHÍNH
+# ==============================================================================
+def process_batch_logic(students: List[StudentData]):
+    if model is None or surrogate_tree is None:
+        return {"error": "Server chưa nạp được mô hình. Vui lòng kiểm tra lại thư mục chạy."}
+
+    data_dicts = [student.model_dump() if hasattr(student, 'model_dump') else student.dict() for student in students]
+    
+    for row in data_dicts:
+        diem = row['Previous_Scores']
+        if diem <= 4.0: row['Previous_Scores'] = float(diem * 25)
+        elif diem <= 10.0: row['Previous_Scores'] = float(diem * 10)
+            
+    df_input = pd.DataFrame(data_dicts)
+    df_encoded = df_input.copy()
+    
+    for col in encoders:
+        if col in df_encoded.columns:
+            df_encoded[col] = df_encoded[col].astype(str)
+            mapping_dict = dict(zip(encoders[col].classes_, range(len(encoders[col].classes_))))
+            df_encoded[col] = df_encoded[col].map(mapping_dict).fillna(0).astype(int)
+            
+    X_encoded = df_encoded[FEATURES]
+    risk_probabilities = model.predict_proba(X_encoded)[:, 1] * 100
+    
+    batch_results = []
+    for i, risk in enumerate(risk_probabilities):
+        risk_percent = float(round(float(risk), 2))
+        
+        if risk_percent >= 65: risk_level = "CAO (Nguy hiểm)"
+        elif risk_percent >= 40: risk_level = "TRUNG BÌNH (Cần theo dõi)"
+        else: risk_level = "THẤP (An toàn)"
+        
+        X_row_array = X_encoded.iloc[i].values
+        lo_trinh_ai = trich_xuat_duong_di_mot_sv(X_row_array)
+        
+        # 🔥 GỌI HÀM SINH LÝ DO ĐÃ SẮP XẾP CHO FRONTEND
+        sorted_reasons = extract_sorted_reasons(data_dicts[i], risk_percent)
+
+        batch_results.append({
+            "index": int(i), 
+            "risk_score_percent": risk_percent,
+            "risk_level": str(risk_level),
+            "sorted_reasons_for_ui": sorted_reasons,
+            "ai_explanation_path": lo_trinh_ai, 
+            "original_features": data_dicts[i]
+        })
+        
+    return {
+        "status": "success",
+        "total_processed": int(len(students)),
+        # XÓA lệnh str() bọc ở ngoài cay_text để nó giữ nguyên định dạng Mảng (List)
+        "tree_rules_for_professor": cay_text,
+        "label_encoding_map": bang_quy_doi,
+        "results": batch_results
+    }
+
+# ==============================================================================
+# API QUÉT SỈ (BATCH) VÀ QUÉT LẺ (SINGLE)
 # ==============================================================================
 @app.post("/api/predict_batch")
 def predict_risk_batch(students: List[StudentData]):
-    # Chống làm treo Server
-    if len(students) > 5000:
-        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ tối đa 5000 sinh viên/lần quét.")
-
     try:
-        data_dicts = [student.dict() for student in students]
-        
-        # Sửa lỗi khác biệt hệ điểm (Nếu điểm hệ 10 thì nhân 10)
-        for row in data_dicts:
-            if row['Previous_Scores'] <= 10.0:
-                row['Previous_Scores'] = row['Previous_Scores'] * 10
-                
-        df_input = pd.DataFrame(data_dicts)
-        
-        # Tiền xử lý: Dịch Label Encoding
-        for col in encoders:
-            if col in df_input.columns:
-                df_input[col] = df_input[col].astype(str)
-                mapping_dict = dict(zip(encoders[col].classes_, range(len(encoders[col].classes_))))
-                df_input[col] = df_input[col].map(mapping_dict).fillna(0).astype(int)
-                
-        X_input = df_input[FEATURES]
-        risk_probabilities = model.predict_proba(X_input)[:, 1] * 100
-        
-        batch_results = []
-        for i, risk in enumerate(risk_probabilities):
-            student_info = students[i]
+        raw_response = process_batch_logic(students)
+        if "error" in raw_response:
+            return Response(content=json.dumps({"detail": raw_response["error"]}, ensure_ascii=False), status_code=503, media_type="application/json")
             
-            risk_percent = round(risk, 2)
-            if risk_percent >= 65: risk_level = "CAO (Nguy hiểm)"
-            elif risk_percent >= 40: risk_level = "TRUNG BÌNH (Cần theo dõi)"
-            else: risk_level = "THẤP (An toàn)"
-                
-            reasons = []
-            if risk_percent >= 40:
-                # 1. Bắt lỗi Số (Cộng thêm logic xử lý điểm hệ 10 cho đúng logic cảnh báo)
-                diem_kiem_tra = student_info.Previous_Scores * 10 if student_info.Previous_Scores <= 10 else student_info.Previous_Scores
-                
-                if student_info.Attendance < 70: reasons.append(f"Chuyên cần thấp ({student_info.Attendance}%)")
-                if diem_kiem_tra < 60: reasons.append(f"Mất gốc/Điểm cũ thấp ({diem_kiem_tra}/100)")
-                if student_info.Hours_Studied < 10: reasons.append(f"Tự học rất ít ({student_info.Hours_Studied}h/tuần)")
-                if student_info.Sleep_Hours < 6: reasons.append(f"Thiếu ngủ, thể trạng kém ({student_info.Sleep_Hours}h/ngày)")
-                
-                # 2. Bắt lỗi chữ (Đã match 100% với CSV tiếng Anh gốc)
-                if student_info.Motivation_Level in ["Low"]: reasons.append("Động lực học tập hiện tại suy giảm đáng kể")
-                if student_info.Family_Income in ["Low"]: reasons.append("Có áp lực về điều kiện tài chính gia đình")
-                if student_info.Distance_from_Home in ["Far"]: reasons.append("Khoảng cách di chuyển quá xa ảnh hưởng sức khỏe")
-                if student_info.Access_to_Resources in ["Low"]: reasons.append("Thiếu thốn tài nguyên/thiết bị phục vụ học tập")
-                if student_info.Peer_Influence in ["Negative"]: reasons.append("Chịu ảnh hưởng tiêu cực từ môi trường bạn bè")
-                if student_info.Teacher_Quality in ["Low"]: reasons.append("Chưa tương thích với phương pháp giảng dạy")
-
-                if len(reasons) == 0: reasons.append("Có rủi ro tiềm ẩn (AI đánh giá tổng hợp đa biến)")
-
-            batch_results.append({
-                "index": i, 
-                "risk_score_percent": risk_percent,
-                "risk_level": risk_level,
-                "reasons": reasons,
-                "original_features": student_info.dict() 
-            })
-            
-        return {
-            "status": "success",
-            "total_processed": len(students),
-            "results": batch_results
-        }
+        cleaned_response = clean_for_json(raw_response)
+        json_str = json.dumps(cleaned_response, ensure_ascii=False)
+        return Response(content=json_str, media_type="application/json")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi Server AI: {str(e)}")
+        error_trace = traceback.format_exc()
+        print(error_trace)
+        return Response(
+            content=json.dumps({"detail": f"Lỗi nội bộ Python: {str(e)}", "traceback_de_bug": error_trace}, ensure_ascii=False),
+            status_code=500,
+            media_type="application/json"
+        )
 
 @app.post("/api/predict")
-def predict_risk(student: StudentData):
-    batch_result = predict_risk_batch([student])
-    return batch_result["results"][0]
+def predict_risk_single(student: StudentData):
+    try:
+        raw_response = process_batch_logic([student])
+        if "error" in raw_response:
+            return Response(content=json.dumps({"detail": raw_response["error"]}, ensure_ascii=False), status_code=503, media_type="application/json")
+            
+        single_response = {
+            "status": "success",
+            # XÓA lệnh str() ở đây luôn
+            "tree_rules_for_professor": raw_response["tree_rules_for_professor"],
+            "label_encoding_map": raw_response["label_encoding_map"],
+            "result": raw_response["results"][0]
+        }
+        
+        cleaned_response = clean_for_json(single_response)
+        json_str = json.dumps(cleaned_response, ensure_ascii=False)
+        return Response(content=json_str, media_type="application/json")
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(error_trace)
+        return Response(
+            content=json.dumps({"detail": f"Lỗi nội bộ Python: {str(e)}", "traceback_de_bug": error_trace}, ensure_ascii=False),
+            status_code=500,
+            media_type="application/json"
+        )
+
+@app.get("/")
+def health_check():
+    trang_thai_mo_hinh = "SẴN SÀNG" if (model is not None and surrogate_tree is not None) else "LỖI THIẾU FILE!"
+    return Response(content=json.dumps({"status": "ok", "message": "API Explainable AI đang hoạt động!", "model_status": trang_thai_mo_hinh}, ensure_ascii=False), media_type="application/json")

@@ -1,0 +1,94 @@
+|--- Attendance <= 71.50
+|   |--- Hours_Studied <= 21.50
+|   |   |--- Hours_Studied <= 15.50
+|   |   |   |--- Attendance <= 66.50
+|   |   |   |   |--- Previous_Scores <= 85.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Previous_Scores >  85.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |--- Attendance >  66.50
+|   |   |   |   |--- Motivation_Level <= 0.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Motivation_Level >  0.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |--- Hours_Studied >  15.50
+|   |   |   |--- Attendance <= 64.50
+|   |   |   |   |--- Previous_Scores <= 79.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Previous_Scores >  79.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |--- Attendance >  64.50
+|   |   |   |   |--- Previous_Scores <= 66.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Previous_Scores >  66.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |--- Hours_Studied >  21.50
+|   |   |--- Hours_Studied <= 25.50
+|   |   |   |--- Access_to_Resources <= 0.50
+|   |   |   |   |--- Previous_Scores <= 66.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Previous_Scores >  66.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |--- Access_to_Resources >  0.50
+|   |   |   |   |--- Attendance <= 66.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Attendance >  66.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |--- Hours_Studied >  25.50
+|   |   |   |--- Hours_Studied <= 27.50
+|   |   |   |   |--- Previous_Scores <= 64.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Previous_Scores >  64.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |--- Hours_Studied >  27.50
+|   |   |   |   |--- Attendance <= 60.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Attendance >  60.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|--- Attendance >  71.50
+|   |--- Hours_Studied <= 14.50
+|   |   |--- Attendance <= 80.50
+|   |   |   |--- Hours_Studied <= 12.50
+|   |   |   |   |--- Previous_Scores <= 86.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Previous_Scores >  86.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |--- Hours_Studied >  12.50
+|   |   |   |   |--- Previous_Scores <= 78.50
+|   |   |   |   |   |--- Dự báo: RỦI RO CAO
+|   |   |   |   |--- Previous_Scores >  78.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |--- Attendance >  80.50
+|   |   |   |--- Attendance <= 88.50
+|   |   |   |   |--- Previous_Scores <= 75.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Previous_Scores >  75.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |--- Attendance >  88.50
+|   |   |   |   |--- Attendance <= 91.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Attendance >  91.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |--- Hours_Studied >  14.50
+|   |   |--- Attendance <= 78.50
+|   |   |   |--- Hours_Studied <= 20.50
+|   |   |   |   |--- Previous_Scores <= 67.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Previous_Scores >  67.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |--- Hours_Studied >  20.50
+|   |   |   |   |--- Previous_Scores <= 50.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Previous_Scores >  50.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |--- Attendance >  78.50
+|   |   |   |--- Attendance <= 84.50
+|   |   |   |   |--- Hours_Studied <= 20.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Hours_Studied >  20.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |--- Attendance >  84.50
+|   |   |   |   |--- Hours_Studied <= 15.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
+|   |   |   |   |--- Hours_Studied >  15.50
+|   |   |   |   |   |--- Dự báo: AN TOÀN
