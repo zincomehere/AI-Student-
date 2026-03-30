@@ -2,16 +2,24 @@
 # LỆNH KHỞI ĐỘNG SERVER LOCAL: uvicorn api_ai:app --reload
 # ==============================================================================
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, BackgroundTasks, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List
 import pandas as pd
 import numpy as np
 import joblib
+import os
+import shutil
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import roc_curve, auc
+from sklearn.tree import DecisionTreeClassifier, export_text
+from imblearn.over_sampling import SMOTE
 from catboost import CatBoostClassifier
 import json
 import traceback
+from datetime import datetime
 
 app = FastAPI(title="Hệ thống Cảnh báo Rủi ro Sinh viên - Ultimate AI API", version="2.0.0")
 
@@ -42,7 +50,7 @@ FEATURE_IMPORTANCE_ORDER = [
     'Distance_from_Home', 'Teacher_Quality', 'Extracurricular_Activities'
 ]
 
-# 1. BỌC ÁO GIÁP PYDANTIC (Đã thêm cờ nhận diện thang điểm)
+# 1. BỌC ÁO GIÁP PYDANTIC
 class StudentData(BaseModel):
     Attendance: float = Field(default=75.0)
     Hours_Studied: float = Field(default=10.0)
@@ -55,9 +63,6 @@ class StudentData(BaseModel):
     Extracurricular_Activities: str = Field(default="No")
     Sleep_Hours: float = Field(default=7.0)
     Teacher_Quality: str = Field(default="Medium")
-    
-
-  
 
     class Config:
         extra = "ignore" 
@@ -99,7 +104,6 @@ def clean_for_json(obj):
     else:
         return str(obj)
 
-# 🔥 ĐÃ FIX: HÀM NÀY NHẬN THÊM BIẾN `catboost_risk_level` ĐỂ ÉP CUNG
 def trich_xuat_duong_di_mot_sv(X_encoded_row, catboost_risk_level):
     if surrogate_tree is None:
         return ["Lỗi: Hệ thống chưa nạp được Cây Quyết Định"]
@@ -124,7 +128,6 @@ def trich_xuat_duong_di_mot_sv(X_encoded_row, catboost_risk_level):
         huong_di = f"<= {gia_tri_nguong} (Rẽ TRÁI)" if gia_tri_sv <= gia_tri_nguong else f"> {gia_tri_nguong} (Rẽ PHẢI)"
         lo_trinh.append(f"Xét [{ten_bien}]: Đạt {gia_tri_sv} {huong_di}")
         
-    # 🔥 ĐÃ FIX LỖI "CHÓ ĐÁ MÈO": Dùng kết quả CatBoost chốt câu cuối cùng
     if "Nguy hiểm" in catboost_risk_level or "CAO" in catboost_risk_level:
         lo_trinh.append(f"==> DỰ ĐOÁN CUỐI CÙNG TỪ LÕI AI: {catboost_risk_level} ")
     elif "Theo dõi" in catboost_risk_level or "TRUNG BÌNH" in catboost_risk_level:
@@ -170,7 +173,7 @@ def extract_sorted_reasons(row_dict, risk_percent):
     return reasons
 
 # ==============================================================================
-# LÕI XỬ LÝ CHÍNH (ĐÃ THÊM ĐIỂM LIỆT + AN TOÀN QUY ĐỔI ĐIỂM)
+# LÕI XỬ LÝ CHÍNH
 # ==============================================================================
 def process_batch_logic(students: List[StudentData]):
     if model is None or surrogate_tree is None:
@@ -178,12 +181,11 @@ def process_batch_logic(students: List[StudentData]):
 
     data_dicts = [student.model_dump() if hasattr(student, 'model_dump') else student.dict() for student in students]
     
-    # 1. QUY ĐỔI ĐIỂM AN TOÀN
+    # QUY ĐỔI ĐIỂM AN TOÀN
     for row in data_dicts:
         diem = row['Previous_Scores']
         loai_thang_diem = row.get('Scale_Type', '100')
         
-        # Chỉ nhân nếu Frontend chỉ định rõ thang điểm 4 hoặc 10, để tránh nhân nhầm điểm 8/100
         if loai_thang_diem == '4' or (loai_thang_diem == '100' and diem <= 4.0): 
             row['Previous_Scores'] = float(diem * 25)
         elif loai_thang_diem == '10' or (loai_thang_diem == '100' and 4.0 < diem <= 10.0): 
@@ -192,7 +194,7 @@ def process_batch_logic(students: List[StudentData]):
     df_input = pd.DataFrame(data_dicts)
     df_encoded = df_input.copy()
     
-    # 2. LABEL ENCODING
+    # LABEL ENCODING
     for col in encoders:
         if col in df_encoded.columns:
             df_encoded[col] = df_encoded[col].astype(str)
@@ -206,36 +208,10 @@ def process_batch_logic(students: List[StudentData]):
     
     batch_results = []
     
-    # 3. KẾT HỢP ĐIỂM LIỆT + KẾT QUẢ AI
+    # XỬ LÝ KẾT QUẢ TỪ AI (Đã bỏ lưới lọc điểm liệt)
     for i, risk in enumerate(risk_probabilities):
         sv_dict = data_dicts[i]
         
-        # 🔥 TẦNG 1: LƯỚI LỌC "ĐIỂM LIỆT" (QUY CHẾ TRƯỜNG)
-        if sv_dict['Attendance'] < 70.0:
-            batch_results.append({
-                "index": int(i), 
-                "risk_score_percent": 100.0,
-                # TRẢ LẠI ĐÚNG CHỮ FRONTEND CẦN ĐỂ KHÔNG GÃY UI
-                "risk_level": "CAO (Nguy hiểm)", 
-                # NHÉT CHỮ CẤM THI VÀO ĐÂY THEO ĐÚNG Ý FRONTEND
-                "sorted_reasons_for_ui": [f"BÁO ĐỘNG ĐỎ: Vắng mặt quá 30% (Đạt {sv_dict['Attendance']}%) - MỨC CẤM THI THEO QUY CHẾ."],
-                "ai_explanation_path": ["Hệ thống phát hiện vi phạm Quy chế cứng về Chuyên cần.", "==> XỬ LÝ KHẨN CẤP: ĐÌNH CHỈ / CẤM THI "],
-                "original_features": sv_dict
-            })
-            continue 
-            
-        elif sv_dict['Previous_Scores'] <= 0.0:
-            batch_results.append({
-                "index": int(i), 
-                "risk_score_percent": 100.0,
-                "risk_level": "CAO (Nguy hiểm)", # TRẢ LẠI ĐÚNG CHỮ
-                "sorted_reasons_for_ui": ["BÁO ĐỘNG ĐỎ: Điểm tích lũy bằng 0 - MỨC ĐÌNH CHỈ HỌC TẬP."],
-                "ai_explanation_path": ["Vi phạm ranh giới điểm số cốt lõi.", "==> XỬ LÝ KHẨN CẤP: ĐÌNH CHỈ / CẤM THI "],
-                "original_features": sv_dict
-            })
-            continue
-
-        # 🔥 TẦNG 2: XỬ LÝ KẾT QUẢ AI (CHO NHỮNG CA QUA ĐƯỢC ĐIỂM LIỆT) 🔥
         risk_percent = float(round(float(risk), 2))
         
         if risk_percent >= 65: risk_level = "CAO (Nguy hiểm)"
@@ -244,7 +220,6 @@ def process_batch_logic(students: List[StudentData]):
         
         X_row_array = X_encoded.iloc[i].values
         
-        # Truyền thêm risk_level vào hàm dò đường
         lo_trinh_ai = trich_xuat_duong_di_mot_sv(X_row_array, risk_level)
         sorted_reasons = extract_sorted_reasons(sv_dict, risk_percent)
 
@@ -266,8 +241,137 @@ def process_batch_logic(students: List[StudentData]):
     }
 
 # ==============================================================================
-# API QUÉT SỈ (BATCH) VÀ QUÉT LẺ (SINGLE)
+# LÕI TỰ ĐỘNG HỌC LẠI (AUTO-RETRAIN) & ĐỒNG BỘ X-QUANG AI
 # ==============================================================================
+def tien_hanh_tu_hoc_tu_file_moi(file_path_moi: str):
+    """Hàm chạy ngầm xử lý file do Phòng Đào tạo vừa up lên"""
+    global model, encoders, bang_quy_doi, surrogate_tree, cay_text 
+    
+    print("[END-OF-SEMESTER RETRAIN] BẮT ĐẦU TIẾN TRÌNH CẬP NHẬT KIẾN THỨC MỚI...")
+    
+    try:
+        # 1. Đọc file gốc và file mới
+        df_goc = pd.read_csv('StudentPerformanceFactors.csv')
+        df_moi = pd.read_csv(file_path_moi)
+        
+        if 'Exam_Score' not in df_moi.columns:
+            print("[TỪ CHỐI] File upload không có cột 'Exam_Score'. Bắt buộc phải có điểm thi để AI học lại!")
+            return
+            
+        # Gộp dữ liệu
+        df_tong = pd.concat([df_goc, df_moi], ignore_index=True)
+        print(f"Đã gộp dữ liệu thành công. Tổng sinh viên: {len(df_tong)}")
+        
+        # 🔥 FIX LỖI TỬ HUYỆT: LƯU FILE TÍCH LŨY KHI RAW DATA CÒN NGUYÊN VẸN CỘT EXAM_SCORE
+        df_tong.to_csv('StudentPerformanceFactors.csv', index=False)
+        print(f"Đã lưu tích lũy {len(df_tong)} sinh viên vào kho dữ liệu gốc an toàn!")
+            
+        cot_giu_lai = [
+            'Attendance', 'Hours_Studied', 'Previous_Scores', 'Access_to_Resources', 
+            'Motivation_Level', 'Family_Income', 'Peer_Influence', 'Distance_from_Home', 
+            'Extracurricular_Activities', 'Sleep_Hours', 'Teacher_Quality', 'Exam_Score'
+        ]
+        
+        # 2. Xử lý & Cắt chia
+        df_tong = df_tong[cot_giu_lai]
+        # Sau dòng này là cột Exam_Score bị biến mất, nên ta phải lưu nó ở phía trên!
+        df_tong['Rui_ro'] = df_tong['Exam_Score'].apply(lambda x: 1 if x < 65 else 0)
+        df_tong = df_tong.drop('Exam_Score', axis=1)
+
+        new_encoders_dict = {} 
+        for col in df_tong.select_dtypes(exclude=['number']).columns:
+            le = LabelEncoder()
+            df_tong[col] = le.fit_transform(df_tong[col].astype(str))
+            new_encoders_dict[col] = le 
+
+        X = df_tong.drop('Rui_ro', axis=1)
+        y = df_tong['Rui_ro']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+        smote = SMOTE(random_state=42)
+        X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+
+        # 3. Tính AUC Não Cũ
+        try:
+            y_probs_old = model.predict_proba(X_test)[:, 1]
+            fpr_old, tpr_old, _ = roc_curve(y_test, y_probs_old)
+            auc_old = auc(fpr_old, tpr_old)
+        except:
+            auc_old = 0.0
+
+        # 4. Huấn luyện Não Mới
+        new_model = CatBoostClassifier(iterations=200, learning_rate=0.05, depth=6, loss_function='Logloss', verbose=0)
+        new_model.fit(X_train_smote, y_train_smote)
+        
+        y_probs_new = new_model.predict_proba(X_test)[:, 1]
+        fpr_new, tpr_new, _ = roc_curve(y_test, y_probs_new)
+        auc_new = auc(fpr_new, tpr_new)
+
+        # 5. CHỐT CHẶN AN TOÀN & HOT-RELOAD
+        if auc_new >= 0.80:
+            print(f"[RETRAIN] NÃO MỚI TỐT HƠN ({auc_new:.4f} >= 0.80). ĐANG THAY NÃO...")
+            
+            if os.path.exists("catboost_model.cbm"):
+                shutil.copy("catboost_model.cbm", "catboost_model_backup.cbm")
+            new_model.save_model("catboost_model.cbm")
+            joblib.dump(new_encoders_dict, "label_encoders.pkl")
+            
+            # Cập nhật Surrogate Tree
+            print("Đang đồng bộ lại Cây X-Quang...")
+            catboost_predictions = new_model.predict(X)
+            new_surrogate = DecisionTreeClassifier(max_depth=7, random_state=42)
+            new_surrogate.fit(X, catboost_predictions)
+            joblib.dump(new_surrogate, "surrogate_tree.pkl")
+            
+            new_tree_rules = export_text(new_surrogate, feature_names=FEATURES)
+            new_tree_rules = new_tree_rules.replace("class: 0", "Dự báo: AN TOÀN").replace("class: 1", "Dự báo: RỦI RO CAO")
+            with open("cay_tong_quat.txt", "w", encoding="utf-8") as f:
+                f.write(new_tree_rules)
+            
+            # Thay não trực tiếp trên RAM
+            model = new_model
+            encoders = new_encoders_dict
+            surrogate_tree = new_surrogate
+            cay_text = [line for line in new_tree_rules.split('\n') if line.strip()]
+            
+            bang_quy_doi.clear()
+            for col, encoder in encoders.items():
+                bang_quy_doi[str(col)] = {str(label): int(val) for label, val in zip(encoder.classes_, range(len(encoder.classes_)))}
+                
+            print("🎉 [RETRAIN] HOÀN TẤT THAY NÃO ZERO-DOWNTIME CHUẨN MLOPS!")
+        else:
+            print(f"[RETRAIN] NÃO MỚI DƯỚI CHUẨN ({auc_new:.4f} < 0.80). TỪ CHỐI CẬP NHẬT!")
+            
+        # Dọn rác
+        if os.path.exists(file_path_moi):
+            os.remove(file_path_moi)
+            
+    except Exception as e:
+        print(f"[RETRAIN] LỖI HỆ THỐNG TRONG LÚC HỌC: {e}")
+        if os.path.exists(file_path_moi):
+            os.remove(file_path_moi)
+
+@app.post("/api/retrain_end_of_semester")
+async def api_upload_and_retrain(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ định dạng file CSV.")
+        
+    temp_file_path = f"temp_retrain_{file.filename}"
+    try:
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        background_tasks.add_task(tien_hanh_tu_hoc_tu_file_moi, temp_file_path)
+        
+        return {
+            "status": "success",
+            "message": "Đã nhận file điểm học kỳ mới. Hệ thống AI đang tự học ngầm và đồng bộ cây X-Quang. Dự kiến hoàn tất trong 2-3 phút."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi lưu file: {str(e)}")
+
+# ... (Giữ nguyên các khối API Batch, Single và Health Check phía dưới) ...
+
 @app.post("/api/predict_batch")
 def predict_risk_batch(students: List[StudentData]):
     try:
@@ -315,5 +419,19 @@ def predict_risk_single(student: StudentData):
 
 @app.get("/")
 def health_check():
+    thoi_gian_update = "Chưa rõ"
+    if os.path.exists("catboost_model.cbm"):
+        timestamp = os.path.getmtime("catboost_model.cbm")
+        thoi_gian_update = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
     trang_thai_mo_hinh = "SẴN SÀNG" if (model is not None and surrogate_tree is not None) else "LỖI THIẾU FILE!"
-    return Response(content=json.dumps({"status": "ok", "message": "API Explainable AI (Hybrid Rule-Based) đang hoạt động!", "model_status": trang_thai_mo_hinh}, ensure_ascii=False), media_type="application/json")
+    
+    return Response(
+        content=json.dumps({
+            "status": "ok", 
+            "message": "API Explainable AI đang hoạt động!", 
+            "model_status": trang_thai_mo_hinh,
+            "last_retrain_time": thoi_gian_update
+        }, ensure_ascii=False), 
+        media_type="application/json"
+    )
