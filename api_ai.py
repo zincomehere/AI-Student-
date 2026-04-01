@@ -435,3 +435,30 @@ def health_check():
         }, ensure_ascii=False), 
         media_type="application/json"
     )
+import os
+
+# API MỚI DÀNH RIÊNG CHO FRONTEND LẤY CÂY X-QUANG HIỂN THỊ
+@app.get("/api/model/current_tree")
+async def get_current_ai_tree():
+    tree_path = "cay_tong_quat.txt" # Tên file chứa cây X-Quang của ông
+    
+    if not os.path.exists(tree_path):
+        return {
+            "status": "error", 
+            "message": "Chưa có dữ liệu cây. Vui lòng train mô hình trước!"
+        }
+        
+    try:
+        with open(tree_path, "r", encoding="utf-8") as f:
+            cay_text = [line.strip() for line in f.readlines() if line.strip()]
+            
+        return {
+            "status": "success",
+            "message": "✅ Đã lấy thông tin cây Quyết định (Não AI) mới nhất!",
+            "data": {
+                "version": "Latest_Model",
+                "tree_rules": cay_text
+            }
+        }
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Lỗi đọc file cây: {str(e)}")
